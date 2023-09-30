@@ -1,10 +1,21 @@
 import * as functions from "firebase-functions";
 import {Storage} from "@google-cloud/storage";
 import {onCall} from "firebase-functions/v2/https";
-
+import {Firestore} from "firebase-admin/firestore";
 const storage = new Storage();
 
+const firestore = new Firestore();
 const rawVideoBucketName = "mehtab-yt-raw-videos";
+const videoCollectionId = "videos";
+
+export interface Video {
+  id?: string,
+  uid?: string,
+  filename?: string,
+  status?: "processing" | "processed",
+  title?: string,
+  description?: string
+}
 
 export const generateUploadUrl = onCall({maxInstances: 1}, async (request) => {
   // Check if the user is authentication
@@ -30,4 +41,10 @@ export const generateUploadUrl = onCall({maxInstances: 1}, async (request) => {
   });
 
   return {url, fileName};
+});
+
+export const getVideos = onCall({maxInstances: 1}, async () => {
+  const querySnapshot =
+    await firestore.collection(videoCollectionId).limit(10).get();
+  return querySnapshot.docs.map((doc) => doc.data());
 });
