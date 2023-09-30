@@ -3,7 +3,7 @@ import {Storage} from "@google-cloud/storage";
 import {onCall} from "firebase-functions/v2/https";
 import {Firestore} from "firebase-admin/firestore";
 const storage = new Storage();
-
+import * as logger from "firebase-functions/logger";
 const firestore = new Firestore();
 const rawVideoBucketName = "mehtab-yt-raw-videos";
 const videoCollectionId = "videos";
@@ -16,6 +16,19 @@ export interface Video {
   title?: string,
   description?: string
 }
+
+export const createUser = functions.auth.user().onCreate((user) => {
+  const userInfo = {
+    uid: user.uid,
+    email: user.email,
+    photoUrl: user.photoURL,
+  };
+
+  firestore.collection("users").doc(user.uid).set(userInfo);
+  logger.info(`User Created: ${JSON.stringify(userInfo)}`);
+  return;
+});
+
 
 export const generateUploadUrl = onCall({maxInstances: 1}, async (request) => {
   // Check if the user is authentication
